@@ -1,0 +1,9 @@
+#ifndef TERMOB_KERNEL_H
+#define TERMOB_KERNEL_H
+
+#define TERMOB_KERNEL_NAME "TERMOB Kernel"
+#define TERMOB_KERNEL_VERSION "0.1.0-dev"
+#define TERMOB_KERNEL_ARCH "i386"
+#define TERMOB_KERNEL_PROFILE "Monolithic"
+
+#endif
