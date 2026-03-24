@@ -198,19 +198,22 @@ void terminal_log(const char* tag, const char* message, vga_color_t tag_fg) {
 
 void terminal_prompt(void) {
     terminal_setcolor(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
-    terminal_write("termob");
+    terminal_write("root");
 
     terminal_setcolor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-    terminal_write("@kernel");
+    terminal_write("@");
+
+    terminal_setcolor(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+    terminal_write("termob");
 
     terminal_setcolor(VGA_COLOR_DARK_GREY, VGA_COLOR_BLACK);
     terminal_write(":");
 
-    terminal_setcolor(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
+    terminal_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     terminal_write("~");
 
-    terminal_setcolor(VGA_COLOR_YELLOW, VGA_COLOR_BLACK);
-    terminal_write("$ ");
+    terminal_setcolor(VGA_COLOR_LIGHT_RED, VGA_COLOR_BLACK);
+    terminal_write("# ");
 
     terminal_setcolor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 }

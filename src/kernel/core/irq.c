@@ -1,18 +1,16 @@
-#include "../include/terminal.h"
+#include "../include/pic.h"
+#include "../include/keyboard.h"
+#include "../include/timer.h"
 
-static inline unsigned char inb(unsigned short port) {
-    unsigned char result;
-    __asm__ volatile ("inb %1, %0" : "=a"(result) : "Nd"(port));
-    return result;
+void irq0_handler_c(void) {
+    timer_handle_tick();
+    pic_send_eoi(0);
 }
 
-void irq1_handler() {
-    unsigned char scancode = inb(0x60);
+void irq1_handler_c(void) {
+    uint8_t scancode;
 
-    terminal_setcolor(10, 0);
-    terminal_write("KEY ");
-
-    (void)scancode;
-
-    __asm__ volatile ("outb %0, %1" : : "a"(0x20), "Nd"(0x20));
+    scancode = keyboard_read_scancode();
+    keyboard_process_scancode(scancode);
+    pic_send_eoi(1);
 }

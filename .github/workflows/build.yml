@@ -1,0 +1,40 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  kernel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib nasm grub-pc-bin grub-common xorriso qemu-system-x86
+
+      - name: Build kernel and ISO
+        run: |
+          make clean all
+          make iso
+
+      - name: Smoke boot
+        run: |
+          set +e
+          timeout 5s qemu-system-x86_64 -cdrom build/termob-kernel.iso -boot d -display none -serial stdio | tee build/serial.log
+          qemu_status=$?
+          set -e
+          if [ "$qemu_status" -ne 0 ] && [ "$qemu_status" -ne 124 ]; then
+            exit "$qemu_status"
+          fi
+          grep -q "TERMOB: idt pic pit keyboard ready" build/serial.log
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: termob-kernel-iso
+          path: build/termob-kernel.iso

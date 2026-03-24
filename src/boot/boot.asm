@@ -18,10 +18,19 @@ extern kernel_main
 
 _start:
     cli
+    mov esp, stack_top
+    xor ebp, ebp
+    cld
     call kernel_main
 
 .hang:
     hlt
     jmp .hang
+
+section .bss
+align 16
+stack_bottom:
+    resb 16384
+stack_top:
 
 section .note.GNU-stack noalloc noexec nowrite progbits
