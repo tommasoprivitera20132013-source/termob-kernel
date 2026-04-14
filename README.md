@@ -1,57 +1,87 @@
 # TERMOB Kernel
 
-TERMOB Kernel is an early-stage, GRUB-booted, 32-bit monolithic kernel written in C and NASM.
-The project is designed as an open-source kernel foundation that other developers can study,
-extend, and use as a base for building a small operating system.
+TERMOB Kernel is an open-source, GRUB-booted, 32-bit monolithic kernel written in C and NASM for the i386 architecture. It is designed as a realistic kernel foundation for low-level systems work, not as a complete operating system.
 
-## Status
+## Project Status
 
-TERMOB Kernel is in active development.
-It is already able to boot, handle CPU exceptions, remap the PIC, receive PIT and keyboard
-interrupts, expose a simple shell, and provide VGA plus serial diagnostics.
+TERMOB currently provides a stable boot path, a VGA text-mode shell, serial diagnostics, memory-management foundations, a driver model, storage diagnostics, FAT read-only support, basic audio paths, and cooperative kernel-thread foundations.
 
-It is not a production operating system and it is not yet suitable for real hardware use.
+What it is:
+- a kernel project
+- a driver-oriented bare-metal foundation
+- a good base for future OS development
 
-## Current Capabilities
+What it is not:
+- not a production operating system
+- not ready for real hardware use without more validation
+- not feature-complete
 
-- Multiboot2 / GRUB boot flow
-- Dedicated kernel stack in early bootstrap
-- VGA text console and shell prompt
-- CPU exception handling with panic screen
-- PIC remap and IRQ dispatch
-- PIT timer on `IRQ0`
-- Keyboard input on `IRQ1`
-- Multiboot2 memory map parsing
-- Physical memory manager with 4 KiB frame bitmap allocator
-- Early 1 MiB kernel heap with `kmalloc` / `kcalloc`
-- Initial 32-bit paging with identity-mapped low memory
-- Serial debug output on `COM1`
-- PC speaker alert and test tone support
-- Live footer monitor for runtime metrics
-- In-memory kernel log with `dmesg`
-- Basic shell commands: `help`, `clear`, `echo`, `beep`, `melody`, `info`, `perf`, `status`, `meminfo`, `pmminfo`, `paging`, `memmap`, `lspci`, `drivers`, `virtio`, `sound`, `audio`, `uname`, `version`, `about`, `uptime`, `ticks`, `logsize`, `dmesg`, `clearlog`, `halt`, `reboot`, `panic`
+## Technical Specification
+
+Current kernel profile:
+- Architecture: `i386` / 32-bit x86
+- Boot protocol: `Multiboot2`
+- Bootloader: `GRUB`
+- Kernel model: monolithic
+- UI mode: VGA text mode `80x25`
+- Address-space model: single kernel address space
+- User mode: not implemented
+- Scheduler: cooperative kernel threads, not preemptive multitasking
+- Filesystem support: FAT read-only only
+- Primary VM target: QEMU
+
+Implemented subsystems:
+- Multiboot2 boot info parsing
+- dedicated early kernel stack
+- IDT, exception handling, panic path
+- PIC remap and IRQ handling
+- PIT timer
+- serial logging on `COM1`
+- in-memory kernel log with `dmesg`
+- physical memory manager
+- bootstrap paging
+- heap allocator with `kmalloc`, `kcalloc`, `kfree`, free-list, coalescing, diagnostics
+- driver model with `device / driver / bus`
+- PCI enumeration
+- virtio transport and `virtio-blk`
+- block layer
+- FAT read-only mount / traversal / file read
+- VGA shell and dashboard
+- PS/2 keyboard
+- PS/2 mouse with wheel-backed shell scroll
+- PC speaker support
+- AC'97 test path / audio PCI detection
+- cooperative scheduler with basic kernel-thread execution
 
 ## Repository Layout
 
 ```text
-src/boot/           early assembly bootstrap and interrupt stubs
-src/kernel/core/    kernel core subsystems
-src/kernel/drivers/ text console, keyboard, serial
-src/kernel/include/ shared kernel headers
-iso/boot/grub/      GRUB configuration for local testing
-docs/               architecture notes and roadmap
+src/boot/            assembly bootstrap, IDT stubs, scheduler switch path
+src/kernel/core/     core kernel subsystems
+src/kernel/drivers/  terminal, keyboard, mouse, serial, audio, virtio
+src/kernel/fs/       FAT read-only implementation
+src/kernel/include/  public kernel headers
+iso/boot/grub/       GRUB config used for local boot media
+docs/                architecture, roadmap, usage, licensing notes
 ```
 
 ## Build Requirements
 
-On a Debian/Ubuntu-style system:
+On a Debian/Ubuntu-style environment:
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y gcc-multilib nasm grub-pc-bin grub-common xorriso qemu-system-x86
 ```
 
+Recommended environment:
+- Linux or WSL
+- QEMU for testing
+- GCC with 32-bit freestanding support
+
 ## Build And Run
+
+Basic flow:
 
 ```bash
 make clean all
@@ -59,91 +89,186 @@ make iso
 make run
 ```
 
-If you specifically want PC speaker audio in QEMU, you can also force the audio-enabled run target:
+Useful targets:
 
-```bash
+```text
+make all
+make iso
+make run
 make run-audio
-```
-
-## Smoke Test
-
-This project also ships with a lightweight boot smoke test:
-
-```bash
+make run-audio-pa
+make run-audio-sdl
+make run-audio-wav
+make run-ac97
+make audio-proof
 make smoke
+make ci
 ```
 
-## Shell Commands
+Notes:
+- `make run` uses the default SDL-backed PC speaker path configured in the `Makefile`
+- `make run-ac97` starts QEMU with an AC'97 device for the kernel audio test path
+- `make run-audio-wav` writes PC speaker output to `build/termob-speaker.wav`
+- `make smoke` performs a short headless boot check
+
+## How To Use It
+
+After boot, the kernel opens a VGA shell prompt:
+
+```text
+[termob /]#
+```
+
+Useful first commands:
 
 ```text
 help
-clear
-echo <text>
-beep
-melody
-info
-perf
+dashboard
 status
 meminfo
-pmminfo
-paging
-memmap
+heapinfo
+sched
 lspci
-drivers
-virtio
-sound
-audio
-uname
-version
-about
-uptime
-ticks
-logsize
+lsblk
+mouse
 dmesg
-clearlog
-halt
-reboot
-panic
 ```
 
-## Shell Shortcuts
+Shell shortcuts:
+- `Ctrl+C` copy current input line
+- `Ctrl+V` paste copied input line
+- `Ctrl+U` clear current input line
+- `Ctrl+L` redraw the shell UI
+- `Left/Right` move inside the input line
+- `Delete` delete at cursor
+- `PageUp/PageDown` scroll shell history
+- mouse wheel scrolls shell history when PS/2 wheel support is active in QEMU
 
-TERMOB currently exposes shell-local shortcuts for the active input line:
+## Shell Command Groups
 
-- `Ctrl+C` copies the current input line into the kernel shell clipboard
-- `Ctrl+V` pastes the shell clipboard back into the current input line
-- `Ctrl+U` clears the current input line
-- `Ctrl+L` redraws the shell UI
+General:
+- `help`
+- `clear`
+- `echo <text>`
+- `beep`
+- `melody`
 
-## Debugging
+System:
+- `dashboard`
+- `sysview`
+- `sched`
+- `info`
+- `status`
+- `perf`
+- `uname`
+- `version`
+- `about`
+- `uptime`
+- `ticks`
 
-TERMOB currently exposes three useful debugging channels:
+Memory:
+- `meminfo`
+- `heapinfo`
+- `heapcheck`
+- `heaptest`
+- `pmminfo`
+- `paging`
+- `memmap`
 
-- VGA panic screen for fatal faults
-- PC speaker alert during panic handling
+Drivers and buses:
+- `lspci`
+- `drivers`
+- `virtio`
+- `vblk`
+- `lsblk`
+- `mouse`
+- `audio`
+- `ac97`
+- `ac97tone`
+
+Storage raw:
+- `blkread0`
+- `blkread <lba>`
+- `blkread <device> <lba>`
+- `blkreadn <device> <lba> <count>`
+- `blksig <device> <lba>`
+- `blkfind <device> <lba> <count>`
+- `bootchk <device> <lba>`
+
+FAT read-only:
+- `fatinfo <device> <lba>`
+- `fatcheck <device> <lba>`
+- `fatentry <device> <boot_lba> <cluster>`
+- `fatchain <device> <boot_lba> <cluster>`
+- `fatstat <device> <boot_lba>`
+- `fatls <device> <boot_lba>`
+- `fatlsroot <device> <boot_lba>`
+- `fatlsdir <device> <boot_lba> <cluster>`
+- `ls <device> <boot_lba> [</dir>]`
+- `fatlookup <device> <boot_lba> </path>`
+- `fatlspath <device> <boot_lba> </dir>`
+- `fatcat <device> <boot_lba> </file>`
+- `fatread <device> <boot_lba> </file> <offset> <count>`
+
+Logs and control:
+- `dmesg`
+- `logsize`
+- `clearlog`
+- `halt`
+- `reboot`
+- `panic`
+
+## FAT Usage Example
+
+Boot the kernel with a FAT image attached to QEMU, then inside the shell:
+
+```text
+lsblk
+fatstat 0 0
+ls 0 0 /
+fatlookup 0 0 /README.TXT
+fatcat 0 0 /README.TXT
+```
+
+Important:
+- `make run` by itself boots the kernel ISO only
+- FAT commands need a block device containing a FAT volume
+
+## Diagnostics
+
+Available diagnostic channels:
+- VGA panic screen
 - serial output on `COM1`
 - in-memory kernel log via `dmesg`
-- PCI audio detection for `AC'97`, `HDA`, `ES1370`, and future `virtio-snd` targets
+- heap diagnostics
+- scheduler diagnostics
+- FAT diagnostics
+- block-device raw inspection
 
-The panic screen also includes a support contact line for this project build.
+Good debug commands:
 
-Serial output example:
-
-```bash
-timeout 5s qemu-system-x86_64 -cdrom build/termob-kernel.iso -boot d -display none -serial stdio
+```text
+dashboard
+status
+heapinfo
+heapcheck
+sched
+mouse
+dmesg
 ```
 
-## Project Goals
+Headless serial boot example:
 
-- Provide a clean educational kernel base
-- Stay small enough to understand end-to-end
-- Be structured well enough for contributors to build an operating system on top of it
-- Keep the code i386- and GRUB-compatible while the platform is still young
+```bash
+timeout 5s qemu-system-x86_64 -boot d -cdrom build/termob-kernel.iso -display none -serial stdio
+```
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Usage Guide](docs/USAGE.md)
+- [Licensing Notes](docs/LICENSING.md)
 - [Contributing](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Security Policy](SECURITY.md)
@@ -151,4 +276,11 @@ timeout 5s qemu-system-x86_64 -cdrom build/termob-kernel.iso -boot d -display no
 
 ## License
 
-This project is released under the [MIT License](LICENSE).
+The TERMOB Kernel source code in this repository is released under the [MIT License](LICENSE).
+
+Important licensing note:
+- the repository source code is MIT-licensed
+- external build tools such as GRUB, QEMU, GCC, NASM, and `xorriso` are separate projects under their own licenses
+- bootable media generated with `grub-mkrescue` includes third-party GRUB components that are not relicensed under MIT
+
+For a practical breakdown, see [docs/LICENSING.md](docs/LICENSING.md).
