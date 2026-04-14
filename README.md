@@ -21,9 +21,15 @@ It is not a production operating system and it is not yet suitable for real hard
 - PIC remap and IRQ dispatch
 - PIT timer on `IRQ0`
 - Keyboard input on `IRQ1`
+- Multiboot2 memory map parsing
+- Physical memory manager with 4 KiB frame bitmap allocator
+- Early 1 MiB kernel heap with `kmalloc` / `kcalloc`
+- Initial 32-bit paging with identity-mapped low memory
 - Serial debug output on `COM1`
+- PC speaker alert and test tone support
+- Live footer monitor for runtime metrics
 - In-memory kernel log with `dmesg`
-- Basic shell commands: `help`, `clear`, `info`, `status`, `uname`, `version`, `about`, `uptime`, `ticks`, `logsize`, `dmesg`, `clearlog`, `echo`, `halt`, `reboot`, `panic`
+- Basic shell commands: `help`, `clear`, `echo`, `beep`, `melody`, `info`, `perf`, `status`, `meminfo`, `pmminfo`, `paging`, `memmap`, `lspci`, `drivers`, `virtio`, `sound`, `audio`, `uname`, `version`, `about`, `uptime`, `ticks`, `logsize`, `dmesg`, `clearlog`, `halt`, `reboot`, `panic`
 
 ## Repository Layout
 
@@ -53,6 +59,12 @@ make iso
 make run
 ```
 
+If you specifically want PC speaker audio in QEMU, you can also force the audio-enabled run target:
+
+```bash
+make run-audio
+```
+
 ## Smoke Test
 
 This project also ships with a lightweight boot smoke test:
@@ -66,8 +78,21 @@ make smoke
 ```text
 help
 clear
+echo <text>
+beep
+melody
 info
+perf
 status
+meminfo
+pmminfo
+paging
+memmap
+lspci
+drivers
+virtio
+sound
+audio
 uname
 version
 about
@@ -76,19 +101,31 @@ ticks
 logsize
 dmesg
 clearlog
-echo <text>
 halt
 reboot
 panic
 ```
+
+## Shell Shortcuts
+
+TERMOB currently exposes shell-local shortcuts for the active input line:
+
+- `Ctrl+C` copies the current input line into the kernel shell clipboard
+- `Ctrl+V` pastes the shell clipboard back into the current input line
+- `Ctrl+U` clears the current input line
+- `Ctrl+L` redraws the shell UI
 
 ## Debugging
 
 TERMOB currently exposes three useful debugging channels:
 
 - VGA panic screen for fatal faults
+- PC speaker alert during panic handling
 - serial output on `COM1`
 - in-memory kernel log via `dmesg`
+- PCI audio detection for `AC'97`, `HDA`, `ES1370`, and future `virtio-snd` targets
+
+The panic screen also includes a support contact line for this project build.
 
 Serial output example:
 

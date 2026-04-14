@@ -1,4 +1,5 @@
 #include "../include/timer.h"
+#include "../include/scheduler.h"
 
 #define PIT_CHANNEL0_DATA 0x40
 #define PIT_COMMAND       0x43
@@ -24,6 +25,7 @@ void timer_init(void) {
 
 void timer_handle_tick(void) {
     timer_ticks++;
+    scheduler_handle_tick();
 }
 
 uint32_t timer_get_ticks(void) {

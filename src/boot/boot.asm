@@ -21,7 +21,10 @@ _start:
     mov esp, stack_top
     xor ebp, ebp
     cld
+    push ebx
+    push eax
     call kernel_main
+    add esp, 8
 
 .hang:
     hlt

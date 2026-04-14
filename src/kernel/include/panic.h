@@ -11,6 +11,8 @@ __attribute__((noreturn)) void kernel_panic_assertion(const char* expression,
                                                       uint32_t line);
 __attribute__((noreturn)) void kernel_panic_exception(const char* exception_name,
                                                       const interrupt_frame_t* frame);
+__attribute__((noreturn)) void kernel_panic_page_fault(const interrupt_frame_t* frame,
+                                                       uint32_t fault_address);
 
 #define KASSERT(expr)                                                           \
     do {                                                                        \

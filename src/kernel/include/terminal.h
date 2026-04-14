@@ -48,8 +48,15 @@ size_t terminal_get_column(void);
 
 void terminal_set_region(size_t top, size_t bottom);
 void terminal_reset_region(void);
+int terminal_scrollback_is_active(void);
+void terminal_scrollback_follow(void);
+void terminal_scrollback_line_up(void);
+void terminal_scrollback_line_down(void);
+void terminal_scrollback_page_up(void);
+void terminal_scrollback_page_down(void);
 
 void terminal_log(const char* tag, const char* message, vga_color_t tag_fg);
 void terminal_prompt(void);
+size_t terminal_prompt_width(void);
 
 #endif

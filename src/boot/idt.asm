@@ -35,10 +35,12 @@ global isr30_stub
 global isr31_stub
 global irq0_stub
 global irq1_stub
+global irq12_stub
 
 extern isr_fault_handler_c
 extern irq0_handler_c
 extern irq1_handler_c
+extern irq12_handler_c
 
 idt_load:
     mov eax, [esp + 4]
@@ -135,6 +137,23 @@ irq1_stub:
     push gs
 
     call irq1_handler_c
+
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+    iretd
+
+irq12_stub:
+    cli
+    pusha
+    push ds
+    push es
+    push fs
+    push gs
+
+    call irq12_handler_c
 
     pop gs
     pop fs

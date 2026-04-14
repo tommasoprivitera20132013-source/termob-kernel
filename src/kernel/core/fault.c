@@ -39,6 +39,13 @@ static const char* const fault_names[32] = {
 void isr_fault_handler_c(const interrupt_frame_t* frame) {
     const char* fault_name;
 
+    if (frame->vector == 14U) {
+        uint32_t fault_address;
+
+        __asm__ volatile ("mov %%cr2, %0" : "=r"(fault_address));
+        kernel_panic_page_fault(frame, fault_address);
+    }
+
     fault_name = "Unknown Exception";
     if (frame->vector < 32) {
         fault_name = fault_names[frame->vector];

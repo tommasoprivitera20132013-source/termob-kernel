@@ -10,8 +10,8 @@
 ## Phase 2: Memory And Runtime
 
 - physical memory discovery
-- kernel heap allocator
-- paging
+- full kernel heap allocator
+- dynamic paging and virtual memory growth beyond the bootstrap identity map
 - stronger fault diagnostics
 
 ## Phase 3: Scheduling And Execution
@@ -41,4 +41,9 @@
 - mouse
 - disk drivers
 - PCI discovery
+- first PCI-backed driver bindings
+- virtio experimentation for VM-friendly devices
+- richer sound beyond the PC speaker baseline
+- real audio output beyond PC speaker tones
+- PCM playback backend for AC'97 or Intel HDA
 - network driver experimentation

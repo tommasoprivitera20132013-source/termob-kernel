@@ -20,6 +20,10 @@ static inline void pic_io_wait(void) {
     __asm__ volatile ("outb %%al, $0x80" : : "a"(0));
 }
 
+static uint16_t pic_data_port_for_irq(uint8_t irq) {
+    return irq < 8U ? PIC1_DATA : PIC2_DATA;
+}
+
 void pic_send_eoi(uint8_t irq) {
     if (irq >= 8) {
         pic_outb(PIC2_COMMAND, PIC_EOI);
@@ -60,4 +64,26 @@ void pic_init(void) {
 
     pic_outb(PIC1_DATA, 0xFC);
     pic_outb(PIC2_DATA, 0xFF);
+}
+
+void pic_set_irq_mask(uint8_t irq) {
+    uint16_t port;
+    uint8_t mask;
+    uint8_t bit;
+
+    port = pic_data_port_for_irq(irq);
+    bit = (uint8_t)(1U << (irq & 7U));
+    mask = pic_inb(port);
+    pic_outb(port, (uint8_t)(mask | bit));
+}
+
+void pic_clear_irq_mask(uint8_t irq) {
+    uint16_t port;
+    uint8_t mask;
+    uint8_t bit;
+
+    port = pic_data_port_for_irq(irq);
+    bit = (uint8_t)(1U << (irq & 7U));
+    mask = pic_inb(port);
+    pic_outb(port, (uint8_t)(mask & (uint8_t)~bit));
 }
