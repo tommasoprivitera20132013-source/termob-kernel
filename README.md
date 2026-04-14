@@ -1,5 +1,14 @@
 # TERMOB Kernel
 
+![Status](https://img.shields.io/badge/status-active-blue)
+![Platform](https://img.shields.io/badge/platform-i386-green)
+![License](https://img.shields.io/badge/license-MIT-yellow)
+![Boot](https://img.shields.io/badge/boot-GRUB%20%2F%20Multiboot2-orange)
+
+TERMOB Kernel is an open-source, GRUB-booted, 32-bit monolithic kernel written in C and NASM for the i386 architecture.
+
+It is designed as a realistic kernel foundation for low-level systems work, not as a complete operating system.
+
 TERMOB Kernel is an open-source, GRUB-booted, 32-bit monolithic kernel written in C and NASM for the i386 architecture. It is designed as a realistic kernel foundation for low-level systems work, not as a complete operating system.
 
 ## Project Status
